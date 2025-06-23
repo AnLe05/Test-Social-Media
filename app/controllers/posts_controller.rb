@@ -1,5 +1,6 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: %i[ edit update destroy ]
+  before_action :set_current_user_post, only: %i[ edit update destroy ]
+
 
   # GET /posts or /posts.json
   def index
