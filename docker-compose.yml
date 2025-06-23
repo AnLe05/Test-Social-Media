@@ -1,41 +1,32 @@
-version: '3.8'
-
-# Logging config
-x-logging: &logging
-  driver: "local"
-  options:
-    max-size: "5m"
-    max-file: "3"
+version: '3.9'
 
 services:
   db:
-    image: postgres
-    env_file:
-      - .env
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: somepassword
+      POSTGRES_DB: myapp_production
     volumes:
-      - postgres:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
-      interval: 5s
-    logging: *logging
+      - postgres_data:/var/lib/postgresql/data
+    #ports:
+    #  - "80:3000"
 
   web:
-    image: my-web
     build: .
-    restart: always
+    command: bundle exec rails s -b 0.0.0.0 -e production
+    platform: linux
+
+    volumes:
+      - .:/myapp
     ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      RAILS_ENV: production
+      - "80:3000"
     depends_on:
-      db:
-        condition: service_healthy
-    logging: *logging
+      - db
+    env_file:
+      - .env  # Load secrets and configs from your .env file
+    environment:
+      RAILS_ENV: production  # still override for safety
 
 volumes:
-  postgres:
+  postgres_data:
